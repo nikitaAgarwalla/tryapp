@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="91afc1f3-a40f-422f-8a66-019964cbd438" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="Mummy@mi234" database="db" />
+	</db:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="269550eb-4147-4e4f-bc08-c08abe0ea574" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="poc_errorhandling_dbFlow_select" doc:id="52105bd6-f470-49ad-b602-c62402fb2676" >
+		<http:listener doc:name="Listener" doc:id="e6bb1dd9-f432-4bcd-a77c-12f8df217619" config-ref="HTTP_Listener_config" path="/select">
+			<http:error-response statusCode="404" reasonPhrase="Table not found">
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<db:select doc:name="Select" doc:id="d80bad7a-9f96-496f-aa51-3f265017f7ff" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from account]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="3605b4ed-08b4-40d8-bb74-aae828ed2c6b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="78189dd3-a983-4a9a-bd8e-e71349b5799b" message="#[payload]"/>
+	</flow>
+	<flow name="poc_errorhandling_dbFlow_insert" doc:id="96e44810-1c1d-43ca-9db6-40f06e9ba736" >
+		<http:listener doc:name="Listener" doc:id="3d76632f-22d2-4779-8a14-8c90a03a7a6a" config-ref="HTTP_Listener_config" path="/insert" >
+			<http:error-response >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<db:insert doc:name="Insert" doc:id="bd5f8953-09f3-4c70-b18b-ae834c1cafbb" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into account2 values(123,"Nikita1",'M',"2017-06-15")
+]]></db:sql>
+		</db:insert>
+		<ee:transform doc:name="Insert_Transform" doc:id="dc2f315d-450f-47d4-9e2a-70f79cf0ccee" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="21a05386-0b03-4421-92a2-4477f45d8650" message="#[payload]" />
+		<error-handler>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="fb1bfd12-b330-4351-bd91-0cc7816b85c9" type="ANY">
+				<set-variable value="500" doc:name="Set Variable" doc:id="e9df63fe-6277-4b38-844c-cfda80f4816b" variableName="SetStatusCode"/>
+				<set-variable value="Table not found" doc:name="Set Variable" doc:id="38f82e78-b40a-4937-b201-76985729ae3e" variableName="errorDescription"/>
+				<ee:transform doc:name="Transform Message" doc:id="74f1a9dd-6fc5-437e-84fe-56f8b3586676" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: vars.errorDescription,
+	statusCode: vars.SetStatusCode
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-payload value="#[payload]" doc:name="Set Payload" doc:id="3fc35bb5-9dd9-42da-8455-19d6dfa92236" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="errorhandling_dbFlow_update" doc:id="9dddbac5-5384-4874-ac41-53de08f92038" >
+		<http:listener doc:name="Listener" doc:id="d72acac7-21aa-4cda-9155-db7fe8f78fd6" config-ref="HTTP_Listener_config" path="/update" />
+		<try doc:name="Try" doc:id="6097e5e0-b1f8-43c0-8e05-43c4d6e93bfc" >
+			<db:update doc:name="Update" doc:id="3dcad877-e4db-497f-a88a-9f42dd1a6f0b" config-ref="Database_Config">
+			<db:sql><![CDATA[UPDATE account2
+SET owner = 'update'
+WHERE name = '1234';]]></db:sql>
+		</db:update>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="98469687-091f-4dc0-9865-99060501a407" type="ANY">
+					<ee:transform doc:name="Transform Message" doc:id="5c82ca59-959c-429a-bbb7-51a744c6cb5c" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "from processor  level "++ (error.description default "")
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="update_transform_message" doc:id="536213ce-f9fe-41f8-b366-5c09109cea0b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="9547c2cb-e394-4515-8bc7-a67d9e2fc367" message="#[payload]" />
+	</flow>
+</mule>
