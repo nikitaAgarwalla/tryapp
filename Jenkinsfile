@@ -9,7 +9,7 @@ bat 'mvn clean install'
 stage('Test') {
 steps {
 echo 'Application in Testing Phase…'
-bat 'mvn test’
+bat 'mvn test'
 }
 }
 stage('Deploy CloudHub') {
