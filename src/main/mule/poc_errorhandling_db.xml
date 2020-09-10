@@ -6,9 +6,6 @@
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-	<db:config name="Database_Config" doc:name="Database Config" doc:id="91afc1f3-a40f-422f-8a66-019964cbd438" >
-		<db:my-sql-connection host="localhost" port="3306" user="root" password="Mummy@mi234" database="db" />
-	</db:config>
 	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="269550eb-4147-4e4f-bc08-c08abe0ea574" >
 		<http:listener-connection host="0.0.0.0" port="8081" />
 	</http:listener-config>
