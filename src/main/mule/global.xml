@@ -4,23 +4,4 @@
 	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-	<configuration doc:name="Configuration" doc:id="3056fa79-fef9-4a82-b931-916b3e9fd7cd" defaultErrorHandler-ref="globalError_Handler" />
-	<error-handler name="globalError_Handler" doc:id="beee1fd0-380a-410d-8aae-ddd4fc7c78bb" >
-		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="9be93cb2-adf7-4525-875e-98ce48d56d2b" type="ANY">
-			<set-variable value="404" doc:name="Set Variable" doc:id="b8415273-00f4-40b2-8a73-f1fa9903c420" variableName="setStatusCode"/>
-			<set-variable value="Error from Global level" doc:name="Set Variable" doc:id="076f1f57-cf81-4460-93fd-ef26978ded0a" variableName="errorDesc"/>
-			<ee:transform doc:name="Transform Message" doc:id="dcda06f2-3ece-4311-89e8-0af2b282b841">
-				<ee:message>
-					<ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-	message: vars.errorDesc,
-	statuscode: vars.setStatusCode
-}]]></ee:set-payload>
-				</ee:message>
-			</ee:transform>
-			<set-payload value="#[payload]" doc:name="Set Payload" doc:id="7a856fa4-157b-40d0-a618-4f5dad5565cc" />
-		</on-error-propagate>
-	</error-handler>
 </mule>
